@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Paperclip, Image, FileText, X } from 'lucide-react';
+import { Send, Paperclip, Image, FileText, X, Brain } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import ChatMessage from './ChatMessage';
@@ -18,7 +18,7 @@ const ChatInterface = () => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      content: 'Hello! I\'m your multimodal AI assistant. I can help you with text, analyze images, and work with files. How can I assist you today?',
+      content: 'Hello! I\'m MIP, your multimodal AI assistant. I can help you with text, analyze images, and work with files. How can I assist you today?',
       role: 'assistant',
       timestamp: new Date(),
     }
@@ -110,12 +110,12 @@ const ChatInterface = () => {
       {/* Header */}
       <div className="bg-white/80 backdrop-blur-sm border-b border-gray-200 p-4 animate-fade-in">
         <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-sm">AI</span>
+          <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center animate-pulse">
+            <Brain className="text-white w-5 h-5" />
           </div>
           <div>
-            <h1 className="text-xl font-semibold text-gray-900">Multimodal AI Assistant</h1>
-            <p className="text-sm text-gray-500">Advanced AI with image and file analysis</p>
+            <h1 className="text-xl font-semibold text-gray-900">MIP</h1>
+            <p className="text-sm text-gray-500">Multimodal Intelligence Platform</p>
           </div>
         </div>
       </div>
@@ -187,7 +187,7 @@ const ChatInterface = () => {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyPress={handleKeyPress}
-              placeholder="Message AI assistant..."
+              placeholder="Message MIP..."
               className="min-h-[50px] max-h-[200px] resize-none border-gray-300 focus:border-blue-500 focus:ring-blue-500 transition-all duration-200"
               disabled={isLoading}
             />
@@ -204,7 +204,7 @@ const ChatInterface = () => {
         </div>
         
         <p className="text-xs text-gray-500 mt-2 text-center">
-          AI can make mistakes. This is a demo interface for educational purposes.
+          MIP can make mistakes. This is a demo interface for educational purposes.
         </p>
       </div>
     </div>

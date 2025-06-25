@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Image, FileText, Download } from 'lucide-react';
+import { Image, FileText, Download, Brain } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface Message {
@@ -39,10 +39,10 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, isNew }) => {
       <div className={`max-w-[80%] ${isUser ? 'order-2' : 'order-1'}`}>
         {!isUser && (
           <div className="flex items-center space-x-2 mb-2">
-            <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
-              <span className="text-white font-bold text-xs">AI</span>
+            <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center animate-pulse">
+              <Brain className="text-white w-4 h-4" />
             </div>
-            <span className="text-sm text-gray-500">AI Assistant</span>
+            <span className="text-sm text-gray-500">MIP</span>
           </div>
         )}
         
