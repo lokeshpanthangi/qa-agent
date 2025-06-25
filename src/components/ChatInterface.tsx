@@ -12,6 +12,7 @@ interface Message {
   role: 'user' | 'assistant';
   timestamp: Date;
   files?: File[];
+  imageUrls?: string[];
 }
 
 const ChatInterface = () => {
@@ -27,8 +28,10 @@ const ChatInterface = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [attachedFiles, setAttachedFiles] = useState<File[]>([]);
   const [showFileUpload, setShowFileUpload] = useState(false);
+  const [isDragOver, setIsDragOver] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const inputAreaRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -38,15 +41,57 @@ const ChatInterface = () => {
     scrollToBottom();
   }, [messages]);
 
+  // Detect image URLs in text
+  const detectImageUrls = (text: string): string[] => {
+    const imageUrlRegex = /(https?:\/\/[^\s]+\.(?:jpg|jpeg|png|gif|webp|svg)(?:\?[^\s]*)?)/gi;
+    return text.match(imageUrlRegex) || [];
+  };
+
+  // Handle drag and drop
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    // Only set drag over to false if we're leaving the input area entirely
+    if (!inputAreaRef.current?.contains(e.relatedTarget as Node)) {
+      setIsDragOver(false);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    
+    const files = Array.from(e.dataTransfer.files);
+    const imageFiles = files.filter(file => file.type.startsWith('image/'));
+    
+    if (imageFiles.length > 0) {
+      setAttachedFiles(prev => [...prev, ...imageFiles]);
+    }
+  };
+
   const handleSendMessage = async () => {
     if (!input.trim() && attachedFiles.length === 0) return;
 
+    // Detect image URLs in the message
+    const imageUrls = detectImageUrls(input);
+    
+    // Remove image URLs from the text content
+    let cleanedContent = input;
+    imageUrls.forEach(url => {
+      cleanedContent = cleanedContent.replace(url, '').trim();
+    });
+
     const userMessage: Message = {
       id: Date.now().toString(),
-      content: input,
+      content: cleanedContent,
       role: 'user',
       timestamp: new Date(),
       files: attachedFiles.length > 0 ? [...attachedFiles] : undefined,
+      imageUrls: imageUrls.length > 0 ? imageUrls : undefined,
     };
 
     setMessages(prev => [...prev, userMessage]);
@@ -68,13 +113,38 @@ const ChatInterface = () => {
   };
 
   const generateAIResponse = (userMessage: Message): string => {
-    if (userMessage.files && userMessage.files.length > 0) {
-      const fileTypes = userMessage.files.map(file => {
-        if (file.type.startsWith('image/')) return 'image';
-        if (file.type.includes('pdf')) return 'PDF';
-        return 'file';
-      });
-      return `I can see you've uploaded ${userMessage.files.length} ${fileTypes.join(', ')}${userMessage.files.length > 1 ? 's' : ''}. ${userMessage.content ? `Regarding your message: "${userMessage.content}" - ` : ''}I'd be happy to help analyze or work with these files. In a real implementation, I would process the actual file contents and provide detailed analysis.`;
+    const hasFiles = userMessage.files && userMessage.files.length > 0;
+    const hasImageUrls = userMessage.imageUrls && userMessage.imageUrls.length > 0;
+    
+    if (hasFiles || hasImageUrls) {
+      let response = "I can see you've shared ";
+      
+      if (hasFiles) {
+        const fileTypes = userMessage.files!.map(file => {
+          if (file.type.startsWith('image/')) return 'image';
+          if (file.type.includes('pdf')) return 'PDF';
+          return 'file';
+        });
+        response += `${userMessage.files!.length} uploaded ${fileTypes.join(', ')}${userMessage.files!.length > 1 ? 's' : ''}`;
+      }
+      
+      if (hasFiles && hasImageUrls) {
+        response += " and ";
+      }
+      
+      if (hasImageUrls) {
+        response += `${userMessage.imageUrls!.length} image URL${userMessage.imageUrls!.length > 1 ? 's' : ''}`;
+      }
+      
+      response += ". ";
+      
+      if (userMessage.content) {
+        response += `Regarding your message: "${userMessage.content}" - `;
+      }
+      
+      response += "I'd be happy to help analyze these images and provide detailed insights. In a real implementation, I would process the actual image contents and provide comprehensive analysis.";
+      
+      return response;
     }
     
     const responses = [
@@ -144,7 +214,24 @@ const ChatInterface = () => {
       </div>
 
       {/* Input Area */}
-      <div className="bg-white/80 backdrop-blur-sm border-t border-gray-200 p-4">
+      <div 
+        ref={inputAreaRef}
+        className={`bg-white/80 backdrop-blur-sm border-t border-gray-200 p-4 transition-all duration-200 ${
+          isDragOver ? 'bg-blue-50/80 border-blue-300' : ''
+        }`}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+      >
+        {isDragOver && (
+          <div className="absolute inset-0 bg-blue-100/50 border-2 border-dashed border-blue-400 rounded-lg flex items-center justify-center z-10 animate-fade-in">
+            <div className="text-center">
+              <Image className="mx-auto mb-2 text-blue-600" size={32} />
+              <p className="text-blue-600 font-medium">Drop images here</p>
+            </div>
+          </div>
+        )}
+        
         {/* Attached Files */}
         {attachedFiles.length > 0 && (
           <div className="flex flex-wrap gap-2 mb-3 animate-fade-in">
@@ -187,7 +274,7 @@ const ChatInterface = () => {
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyPress={handleKeyPress}
-              placeholder="Message MIP..."
+              placeholder="Message MIP... (You can also drag & drop images or paste image URLs)"
               className="min-h-[50px] max-h-[200px] resize-none border-gray-300 focus:border-blue-500 focus:ring-blue-500 transition-all duration-200"
               disabled={isLoading}
             />

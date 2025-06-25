@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Image, FileText, Download, Brain } from 'lucide-react';
+import { Image, FileText, Download, Brain, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface Message {
@@ -9,6 +9,7 @@ interface Message {
   role: 'user' | 'assistant';
   timestamp: Date;
   files?: File[];
+  imageUrls?: string[];
 }
 
 interface ChatMessageProps {
@@ -32,6 +33,10 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, isNew }) => {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+  };
+
+  const openImageUrl = (url: string) => {
+    window.open(url, '_blank', 'noopener,noreferrer');
   };
 
   return (
@@ -91,6 +96,53 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message, isNew }) => {
                   >
                     <Download size={14} />
                   </Button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Image URLs */}
+          {message.imageUrls && message.imageUrls.length > 0 && (
+            <div className="mb-3 space-y-2">
+              {message.imageUrls.map((url, index) => (
+                <div key={index} className={`p-2 rounded-lg ${
+                  isUser ? 'bg-blue-500' : 'bg-white'
+                } transition-all duration-200 hover:scale-[1.02]`}>
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center space-x-2">
+                      <Image size={16} className={isUser ? 'text-blue-100' : 'text-blue-600'} />
+                      <span className={`text-sm ${
+                        isUser ? 'text-blue-100' : 'text-gray-700'
+                      }`}>
+                        Image URL
+                      </span>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => openImageUrl(url)}
+                      className={`p-1 h-auto ${
+                        isUser 
+                          ? 'text-blue-100 hover:text-white hover:bg-blue-500' 
+                          : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100'
+                      }`}
+                    >
+                      <ExternalLink size={14} />
+                    </Button>
+                  </div>
+                  <img
+                    src={url}
+                    alt="Shared image"
+                    className="max-w-48 max-h-48 rounded-lg object-cover"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                      const errorDiv = document.createElement('div');
+                      errorDiv.className = `text-xs ${isUser ? 'text-blue-200' : 'text-red-500'} p-2`;
+                      errorDiv.textContent = 'Failed to load image';
+                      target.parentNode?.appendChild(errorDiv);
+                    }}
+                  />
                 </div>
               ))}
             </div>
