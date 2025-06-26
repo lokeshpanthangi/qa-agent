@@ -1,12 +1,8 @@
 
-import ChatInterface from "@/components/ChatInterface";
+import Layout from "@/components/Layout";
 
 const Index = () => {
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
-      <ChatInterface />
-    </div>
-  );
+  return <Layout />;
 };
 
 export default Index;
